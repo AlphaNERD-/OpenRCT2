@@ -27,6 +27,7 @@
 #include <memory>
 #include <openrct2-ui/input/InputManager.h>
 #include <openrct2-ui/input/MouseInput.h>
+#include <openrct2-ui/input/TouchInput.h>
 #include <openrct2-ui/interface/Window.h>
 #include <openrct2/Context.h>
 #include <openrct2/Diagnostic.h>
@@ -482,58 +483,14 @@ public:
                     }
                     break;
                 }
-                // Apple sends touchscreen events for trackpads, so ignore these events on macOS
-#ifndef __MACOSX__
                 case SDL_FINGERMOTION:
-                    _cursorState.position = { static_cast<int32_t>(e.tfinger.x * _width),
-                                              static_cast<int32_t>(e.tfinger.y * _height) };
-                    break;
                 case SDL_FINGERDOWN:
-                {
-                    ScreenCoordsXY fingerPos = { static_cast<int32_t>(e.tfinger.x * _width),
-                                                 static_cast<int32_t>(e.tfinger.y * _height) };
-
-                    _cursorState.touchIsDouble
-                        = (!_cursorState.touchIsDouble
-                           && e.tfinger.timestamp - _cursorState.touchDownTimestamp < kTouchDoubleTimeout);
-
-                    if (_cursorState.touchIsDouble)
-                    {
-                        StoreMouseInput(MouseState::rightPress, fingerPos);
-                        _cursorState.right = CURSOR_PRESSED;
-                        _cursorState.old = 2;
-                    }
-                    else
-                    {
-                        StoreMouseInput(MouseState::leftPress, fingerPos);
-                        _cursorState.left = CURSOR_PRESSED;
-                        _cursorState.old = 1;
-                    }
-                    _cursorState.touch = true;
-                    _cursorState.touchDownTimestamp = e.tfinger.timestamp;
-                    break;
-                }
                 case SDL_FINGERUP:
                 {
-                    ScreenCoordsXY fingerPos = { static_cast<int32_t>(e.tfinger.x * _width),
-                                                 static_cast<int32_t>(e.tfinger.y * _height) };
-
-                    if (_cursorState.touchIsDouble)
-                    {
-                        StoreMouseInput(MouseState::rightRelease, fingerPos);
-                        _cursorState.right = CURSOR_RELEASED;
-                        _cursorState.old = 4;
-                    }
-                    else
-                    {
-                        StoreMouseInput(MouseState::leftRelease, fingerPos);
-                        _cursorState.left = CURSOR_RELEASED;
-                        _cursorState.old = 3;
-                    }
-                    _cursorState.touch = true;
+                    
+                    StoreTouchInput(SDL_Event touchEvent)
                     break;
                 }
-#endif
                 case SDL_KEYDOWN:
                 {
 #ifndef __MACOSX__
